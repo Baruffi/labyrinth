@@ -1,6 +1,7 @@
 from ursina import *
 
 from classes.ConstrutorDeEntidades import ConstrutorDeEntidades
+from classes.ControladorRobo import ControladorRobo
 from classes.Labirinto import Labirinto
 from classes.Parede import Parede
 from classes.Robo import Robo
@@ -14,9 +15,11 @@ labirinto = Labirinto(parede)
 entidadesLabirinto = construtor.construirLabirinto(labirinto)
 entidadeRobo = construtor.construirRobo(robo)
 
+controlador = ControladorRobo(entidadeRobo)
+
 
 def update():
-    pass
+    controlador.atualizar()
 
 
 app = Ursina()
