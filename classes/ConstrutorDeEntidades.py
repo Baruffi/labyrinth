@@ -10,7 +10,7 @@ from classes.Robo import Robo
 class ConstrutorDeEntidades():
 
     def construirRobo(self, robo: Robo):
-        return Entity(model=robo.model, color=robo.color, position=robo.position)
+        return Entity(model=robo.model, color=robo.color, position=robo.position, scale=robo.scale)
 
     def construirParede(self, parede: Parede):
         return Entity(model=parede.mesh)

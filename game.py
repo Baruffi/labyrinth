@@ -9,8 +9,9 @@ from classes.Robo import Robo
 construtor = ConstrutorDeEntidades()
 
 robo = Robo(0, 0)
-parede = Parede((0, 0, 0), (1, 0, 0))
-labirinto = Labirinto(parede)
+parede1 = Parede((0, 0, 0), (1, 0, 0), (1, 1, 0), (2, 1, 0))
+parede2 = Parede((3, 0, 0), (3, 1, 0), (4, 1, 0), (4, 2, 0))
+labirinto = Labirinto(parede1, parede2)
 
 entidadesLabirinto = construtor.construirLabirinto(labirinto)
 entidadeRobo = construtor.construirRobo(robo)
