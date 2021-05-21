@@ -1,30 +1,27 @@
-import random
-
 from ursina import *
 
-quads = [Entity(model='quad', color=color.orange, scale=(2, 2), position=(0, 0)), Entity(
-    model='quad', color=color.orange, scale=(3, 1), position=(2, 1)), Entity(model='quad', color=color.orange, scale=(1, 3), position=(-1, -2))]
+from classes.ConstrutorDeEntidades import ConstrutorDeEntidades
+from classes.Labirinto import Labirinto
+from classes.Parede import Parede
+from classes.Robo import Robo
 
-random_generator = random.Random()
+construtor = ConstrutorDeEntidades()
+
+robo = Robo(0, 0)
+parede = Parede((0, 0, 0), (1, 0, 0))
+labirinto = Labirinto(parede)
+
+entidadesLabirinto = construtor.construirLabirinto(labirinto)
+entidadeRobo = construtor.construirRobo(robo)
 
 
 def update():
-    for quad in quads:
-        updateQuad(quad)
-
-
-def updateQuad(quad: Entity):
-    # quad.rotation_y += time.dt * 100
-    if held_keys['r']:
-        red = random_generator.random() * 255
-        green = random_generator.random() * 255
-        blue = random_generator.random() * 255
-        quad.color = color.rgb(red, green, blue)
+    pass
 
 
 app = Ursina()
 
-window.title = 'My Game'                # The window title
+window.title = 'Labirinto'                # The window title
 window.borderless = False               # Show a border
 window.fullscreen = False               # Do not go Fullscreen
 # Do not show the in-game red X that loses the window
