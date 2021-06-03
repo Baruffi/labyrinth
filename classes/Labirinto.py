@@ -1,4 +1,4 @@
-from random import randint
+from typing import Dict, Tuple
 
 from ursina import *
 
@@ -9,29 +9,38 @@ class Labirinto(Entity):
 
     def __init__(self):
         super().__init__()
-        self.model = Mesh(vertices=[], uvs=[])
         self.texture = 'white_cube'
+        self.model = Mesh(vertices=[], uvs=[])
+        self.fim = None
 
-    def gerarVertices(self, largura: int, altura: int):
+    def reset(self):
+        self.model = Mesh(vertices=[], uvs=[])
+        self.fim = None
+
         [destroy(c) for c in self.children]
 
-        for y in range(altura):
-            collider = None
+    def gerarVertices(self, dicionario: Dict[Tuple[int, int], str]):
+        for posicao, tipo in dicionario.items():
 
-            for x in range(largura):
-                isWall = randint(0, 1)
+            if tipo == 'start':
+                Entity(parent=self, position=posicao, model='quad',
+                       origin=(-.5, -.5), color=color.green)
+            elif tipo == 'end':
+                Entity(parent=self, position=posicao, model='quad',
+                       origin=(-.5, -.5), color=color.red)
 
-                if isWall:
-                    self.model.vertices += [Vec3(*e) + Vec3(x+.5, y+.5, 0)
-                                            for e in quad.vertices]
-                    self.model.uvs += quad.uvs
+                self.fim = Entity(parent=self, position=posicao, model='quad',
+                                  origin=(-.5, -.5), collider='box', visible=False)
 
-                    if not collider:
-                        collider = Entity(parent=self, position=(
-                            x, y), model='quad', origin=(-.5, -.5), collider='box', visible=False)
-                    else:
-                        collider.scale_x += 1
-                else:
-                    collider = None
+                self.fim.scale = .5, .5
+                self.fim.position = Vec3(self.fim.x + .25, self.fim.y + .25, 0)
+            elif tipo == 'wall':
+                x, y = posicao
+                self.model.vertices += [Vec3(*e) + Vec3(x + .5, y + .5, 0)
+                                        for e in quad.vertices]
+                self.model.uvs += quad.uvs
+
+                Entity(parent=self, position=posicao, model='quad',
+                       origin=(-.5, -.5), collider='box', visible=False)
 
         self.model.generate()
