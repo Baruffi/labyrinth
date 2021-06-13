@@ -1,5 +1,6 @@
 from ursina import *
 
+from classes.Caminho import Caminho
 from classes.Labirinto import Labirinto
 from classes.Mapa import Mapa
 from classes.Robo import Robo
@@ -19,16 +20,18 @@ camera.fov = 24
 
 mapa = Mapa()
 labirinto = Labirinto()
-robo = Robo(0, 0)
+caminho = Caminho()
+robo = Robo(caminho)
 
 
 def reset():
-    labirinto.reset()
-    robo.reset()
     mapa.reset()
+    labirinto.reset()
 
     mapa.gerarDicionario(30)
     labirinto.gerarVertices(mapa.dicionario)
+
+    robo.reset()
 
     inicio_x, inicio_y = mapa.inicio
 

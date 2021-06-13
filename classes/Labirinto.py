@@ -12,6 +12,7 @@ class Labirinto(Entity):
         self.texture = 'white_cube'
         self.model = Mesh(vertices=[], uvs=[])
         self.fim = None
+        # self.visible = False
 
     def reset(self):
         self.model = Mesh(vertices=[], uvs=[])
