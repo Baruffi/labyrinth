@@ -157,7 +157,11 @@ class Robo(Entity):
         self.caminho.memorizePath((direcao_x, direcao_y))
 
     def update(self):
-        self.delta = time.dt
+        self.delta = round(time.dt, 3)
+
+        if self.delta > 0.083:
+            # print(self.delta)
+            return
 
         if self.espera > 0:
             self.espera -= self.delta
