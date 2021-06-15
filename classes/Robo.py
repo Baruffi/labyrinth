@@ -5,6 +5,7 @@ from ursina.hit_info import HitInfo
 
 from classes.Caminho import Caminho
 
+pior_delta = 0.0083
 quad = load_model('quad')
 
 
@@ -77,6 +78,22 @@ class Robo(Entity):
 
     def move(self):
         self.position += self.direcao * self.delta * self.velocidade
+
+        x_int = self.x // 1
+        y_int = self.y // 1
+
+        x_decimal = self.x - x_int
+        y_decimal = self.y - y_int
+
+        desvio = pior_delta * self.velocidade
+
+        if not self.posicao_objetivo:  # TODO: verificar por que ele otimiza diagonais ao ir para o objetivo
+            if not self.direcao.x and ((x_decimal > .5 - desvio and x_decimal < .5) or (x_decimal < .5 + desvio and x_decimal > .5)):
+                self.x = x_int + .5
+            if not self.direcao.y and ((y_decimal > .5 - desvio and y_decimal < .5) or (y_decimal < .5 + desvio and y_decimal > .5)):
+                self.y = y_int + .5
+
+        # print(self.position)
 
     def get_rear(self):
         direcao_x = (self.world_x - (self.direcao.x / 2)) // 1
@@ -157,9 +174,9 @@ class Robo(Entity):
         self.caminho.memorizePath((direcao_x, direcao_y))
 
     def update(self):
-        self.delta = round(time.dt, 3)
+        self.delta = time.dt
 
-        if self.delta > 0.083:
+        if self.delta > pior_delta:
             # print(self.delta)
             return
 
