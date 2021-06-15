@@ -37,7 +37,10 @@ class Mapa():
                 pos = seen.pop()
                 reseen.add(pos)
             else:
-                break
+                if len(reseen or seen) == 0:
+                    return self.gerarDicionario(numero_de_linhas)
+                else:
+                    break
 
         maze[pick(reseen or seen)] = 'end'
 
