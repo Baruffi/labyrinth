@@ -1,3 +1,4 @@
+from math import copysign
 from typing import List, Tuple
 
 from ursina import *
@@ -5,7 +6,6 @@ from ursina.hit_info import HitInfo
 
 from classes.Caminho import Caminho
 
-pior_delta = 0.0083
 quad = load_model('quad')
 
 
@@ -24,6 +24,8 @@ class Robo(Entity):
         self.velocidade = velocidade
 
         self.direcao = Vec3(0, 0, 0).normalized()
+        self.direcao_entity = Entity(
+            parent=self, model='diamond', scale=(.5, .5), color=color.red, always_on_top=True)
         self.delta = 0
 
         self.objetivo = None
@@ -71,33 +73,41 @@ class Robo(Entity):
         return boxcast(self.world_position, direcao, traverse_target=self.objetivo, thickness=(self.scale_x * .8, self.scale_y * .8), distance=1)
 
     def canMove(self):
-        hit_info = boxcast(self.world_position, self.direcao, ignore=(
-            self,), thickness=(self.scale_x * .8, self.scale_y * .8), distance=self.scale_y / 2)
+        if self.objetivo:
+            hit_info = boxcast(self.world_position, self.direcao, ignore=(self, self.objetivo), thickness=(
+                self.scale_x * .8, self.scale_y * .8), distance=self.scale_y / 2)
 
-        return not hit_info.hit
+            return not hit_info.hit
 
     def move(self):
-        self.position += self.direcao * self.delta * self.velocidade
+        if self.objetivo:
+            hit_info = boxcast(self.world_position, self.direcao, ignore=(self, self.objetivo), thickness=(
+                self.scale_x * .8, self.scale_y * .8), distance=(self.scale_y / 2) + (self.delta * self.velocidade))
 
-        x_int = self.x // 1
-        y_int = self.y // 1
+            if hit_info.hit:
+                if self.direcao.x:
+                    self.position = Vec3(
+                        hit_info.world_point.x - self.direcao.x * self.scale_y / 2, self.y, 0)
+                elif self.direcao.y:
+                    self.position = Vec3(
+                        self.x, hit_info.world_point.y - self.direcao.y * self.scale_y / 2, 0)
+            else:
+                self.position += self.direcao * self.delta * self.velocidade
 
-        x_decimal = self.x - x_int
-        y_decimal = self.y - y_int
+            x_int = int(self.x)
+            y_int = int(self.y)
 
-        desvio = pior_delta * self.velocidade
+            if not self.direcao.x:
+                self.x = x_int + copysign(.5, x_int)
+            if not self.direcao.y:
+                self.y = y_int + copysign(.5, y_int)
 
-        if not self.posicao_objetivo:  # TODO: verificar por que ele otimiza diagonais ao ir para o objetivo
-            if not self.direcao.x and ((x_decimal > .5 - desvio and x_decimal < .5) or (x_decimal < .5 + desvio and x_decimal > .5)):
-                self.x = x_int + .5
-            if not self.direcao.y and ((y_decimal > .5 - desvio and y_decimal < .5) or (y_decimal < .5 + desvio and y_decimal > .5)):
-                self.y = y_int + .5
-
-        # print(self.position)
+            # print(self.position)
 
     def get_rear(self):
-        direcao_x = (self.world_x - (self.direcao.x / 2)) // 1
-        direcao_y = (self.world_y - (self.direcao.y / 2)) // 1
+        # TODO: verificar se 2.1 é o melhor número
+        direcao_x = int(self.world_x - (self.direcao.x / 2.1))
+        direcao_y = int(self.world_y - (self.direcao.y / 2.1))
 
         return direcao_x, direcao_y
 
@@ -119,6 +129,8 @@ class Robo(Entity):
                 self.up * (held_keys['w'] - held_keys['s'])
                 + self.right * (held_keys['d'] - held_keys['a'])
             ).normalized()
+
+        self.direcao_entity.position = self.direcao
 
     def path_find(self, direcao_x, direcao_y):
         # print(direcao_x)
@@ -166,7 +178,7 @@ class Robo(Entity):
     def memorizeHitinfo(self, hit_info: HitInfo):
         for entity in hit_info.entities:
             self.caminho.memorizeObstacle(
-                (entity.world_x // 1, entity.world_y // 1))
+                (int(entity.world_x), int(entity.world_y)))
 
     def memorizePath(self):
         direcao_x, direcao_y = self.get_rear()
@@ -176,8 +188,7 @@ class Robo(Entity):
     def update(self):
         self.delta = time.dt
 
-        if self.delta > pior_delta:
-            # print(self.delta)
+        if self.delta * self.velocidade > .5:
             return
 
         if self.espera > 0:
