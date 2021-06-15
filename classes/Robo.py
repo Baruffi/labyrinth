@@ -119,10 +119,12 @@ class Robo(Entity):
             print('Erro de pathfind!')
 
         if self.posicao_objetivo:
-            self.direcao = Vec3(
-                self.down * (self.world_y - self.posicao_objetivo.y)
-                + self.left * (self.world_x - self.posicao_objetivo.x)
-            ).normalized()
+            if abs(self.world_y - self.posicao_objetivo.y) > abs(self.world_x - self.posicao_objetivo.x):
+                self.direcao = Vec3(
+                    self.up * (1 if self.posicao_objetivo.y > self.world_y else -1)).normalized()
+            else:
+                self.direcao = Vec3(
+                    self.right * (1 if self.posicao_objetivo.x > self.world_x else -1)).normalized()
 
         if held_keys['w'] or held_keys['s'] or held_keys['d'] or held_keys['a']:
             self.direcao = Vec3(
