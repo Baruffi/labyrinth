@@ -14,7 +14,7 @@ class Robo(Entity):
     def __init__(self, caminho: Caminho, espera: float = 3, velocidade: int = 5):
         super().__init__()
         self.model = 'quad'
-        self.color = color.blue
+        self.color = color.light_gray
         self.scale = .5, .5
         self.collider = 'box'
         self.always_on_top = True
@@ -23,9 +23,38 @@ class Robo(Entity):
         self.espera = espera
         self.velocidade = velocidade
 
+        self.cauda_entity = Entity(
+            parent=self, model=Mesh(vertices=[], uvs=[]), scale=(.4, .4), color=color.pink, always_on_top=True)
+
+        self.cauda_entity.model.vertices += quad.vertices
+        self.cauda_entity.model.uvs += quad.uvs
+
+        self.cauda_entity.model.vertices += [Vec3(*e) + Vec3(.5, .5, 0)
+                                             for e in quad.vertices]
+        self.cauda_entity.model.uvs += quad.uvs
+
+        self.cauda_entity.model.vertices += [Vec3(*e) + Vec3(1, 1, 0)
+                                             for e in quad.vertices]
+        self.cauda_entity.model.uvs += quad.uvs
+
+        self.cauda_entity.model.generate()
+
+        self.olho_esquerdo_entity = Entity(
+            parent=self, model='diamond', scale=(.6, .6), color=color.white, always_on_top=True)
+
+        self.olho_direito_entity = Entity(
+            parent=self, model='diamond', scale=(.6, .6), color=color.white, always_on_top=True)
+
+        self.iris_esquerda_entity = Entity(
+            parent=self, model='diamond', scale=(.2, .2), color=color.black, always_on_top=True)
+
+        self.iris_direita_entity = Entity(
+            parent=self, model='diamond', scale=(.2, .2), color=color.black, always_on_top=True)
+
+        self.nariz_entity = Entity(
+            parent=self, model='diamond', scale=(.5, .5), color=color.black, always_on_top=True)
+
         self.direcao = Vec3(0, 0, 0).normalized()
-        self.direcao_entity = Entity(
-            parent=self, model='diamond', scale=(.5, .5), color=color.red, always_on_top=True)
         self.delta = 0
 
         self.objetivo = None
@@ -132,7 +161,16 @@ class Robo(Entity):
                 + self.right * (held_keys['d'] - held_keys['a'])
             ).normalized()
 
-        self.direcao_entity.position = self.direcao
+        self.nariz_entity.position = self.direcao
+        self.olho_esquerdo_entity.position = Vec3(
+            self.direcao.x * .35 + self.direcao.y * .35, self.direcao.y * .35 + self.direcao.x * .35, 0)
+        self.olho_direito_entity.position = Vec3(
+            self.direcao.x * .35 - self.direcao.y * .35, self.direcao.y * .35 - self.direcao.x * .35, 0)
+        self.iris_esquerda_entity.position = Vec3(
+            self.direcao.x * .4 + self.direcao.y * .35, self.direcao.y * .4 + self.direcao.x * .35, 0)
+        self.iris_direita_entity.position = Vec3(
+            self.direcao.x * .4 - self.direcao.y * .35, self.direcao.y * .4 - self.direcao.x * .35, 0)
+        self.cauda_entity.position = -self.direcao
 
     def path_find(self, direcao_x, direcao_y):
         # print(direcao_x)
@@ -190,6 +228,7 @@ class Robo(Entity):
     def update(self):
         self.delta = time.dt
 
+        # O valor máximo seria até 1, porém valores menores reduzem eventuais desvios que impactam na implementação atual do histórico
         if self.delta * self.velocidade > .5:
             return
 
