@@ -4,20 +4,21 @@ from ursina import *
 
 
 class Movimento():
-    def __init__(self, ignorar: Tuple[Entity], velocidade: float, escala: Vec3):
+    def __init__(self, obstaculo: Entity, ignorar: Tuple[Entity], velocidade: float, escala: Vec3):
+        self.obstaculo = obstaculo
         self.ignorar = ignorar
         self.velocidade = velocidade
         self.escala = escala
 
     def can_move(self, posicao: Vec3, direcao: Vec3):
-        hit_info = boxcast(posicao, direcao, ignore=self.ignorar,
-                           thickness=self.escala * .8, distance=(self.escala.y / 2))
+        hit_info = boxcast(posicao, direcao, traverse_target=self.obstaculo,
+                           ignore=self.ignorar, thickness=self.escala * .8, distance=(self.escala.y / 2))
 
         return not hit_info.hit
 
     def move(self, posicao: Vec3, direcao: Vec3, delta: float):
-        hit_info = boxcast(posicao, direcao, ignore=self.ignorar, thickness=self.escala * .8,
-                           distance=(self.escala.y / 2) + (delta * self.velocidade))
+        hit_info = boxcast(posicao, direcao, traverse_target=self.obstaculo, ignore=self.ignorar,
+                           thickness=self.escala * .8, distance=(self.escala.y / 2) + (delta * self.velocidade))
 
         if hit_info.hit:
             if direcao.x:

@@ -1,8 +1,13 @@
+from collections import deque
+from typing import Deque
+
 from ursina import *
 
 from classes.Labirinto import Labirinto
 from classes.Mapa import Mapa
-from robos.exemplo.Exemplo import Exemplo
+from classes.Robo import Robo
+from robos.HumanControlled import HumanControlled
+from robos.SelfAvoidingWalker import SelfAvoidingWalker
 
 window.vsync = False
 
@@ -27,9 +32,16 @@ inicio_x, inicio_y = mapa.inicio
 posicao_inicial = Vec3(inicio_x + .5, inicio_y + .5, 0)
 escala = Vec3(.5, .5, 0)
 visao = Vec3(2, 2, 0)
+alcance = 2
+espera = 1
+velocidade = 10
 
-robo = Exemplo(labirinto.fim, labirinto, posicao_inicial,
-               escala, visao, espera=0, velocidade=100)
+human_controlled = HumanControlled(
+    labirinto.fim, labirinto, posicao_inicial, escala, velocidade, espera)
+self_avoiding_walker = SelfAvoidingWalker(
+    labirinto.fim, labirinto, posicao_inicial, escala, visao, alcance, velocidade, espera)
+
+robos: Deque[Robo] = deque([human_controlled, self_avoiding_walker])
 
 
 def reset():
@@ -42,16 +54,30 @@ def reset():
     inicio_x, inicio_y = mapa.inicio
     posicao_inicial = Vec3(inicio_x + .5, inicio_y + .5, 0)
 
-    robo.reset(labirinto.fim, labirinto, posicao_inicial)
+    for robo in robos:
+        robo.reset(labirinto.fim, posicao_inicial)
 
 
 def update():
     if held_keys['r']:
         reset()
 
-    if robo.intersects(labirinto).hit:
-        if robo.intersects(labirinto.fim).hit:
-            reset()
+    if held_keys['q']:
+        robos.rotate(-1)
+
+    if held_keys['e']:
+        robo = robos.rotate(1)
+
+    concluiram_o_labirinto = [
+        robo for robo in robos if robo.intersects(labirinto.fim).hit]
+
+    for robo in concluiram_o_labirinto:
+        robo.espera = 1000
+
+    if len(concluiram_o_labirinto) == len(robos):
+        reset()
+
+    robo = robos[0]
 
     camera.world_x, camera.world_y = robo.world_x, robo.world_y
 

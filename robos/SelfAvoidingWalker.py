@@ -1,49 +1,42 @@
 from typing import List, Tuple
 
-from classes.aparencia.Corpo import Corpo
 from classes.aparencia.Parte import Parte
 from classes.aparencia.Trilha import Trilha
 from classes.comportamento.Memoria import Memoria
-from classes.comportamento.Movimento import Movimento
 from classes.comportamento.Sensor import Sensor
+from classes.Robo import Robo
 from ursina import *
 
 quad = load_model('quad')
 
 
-class Exemplo(Corpo):
+class SelfAvoidingWalker(Robo):
     def __init__(self, alvo: Entity, obstaculo: Entity, posicao: Vec3, escala: Vec3, visao: Vec3, alcance=2, velocidade=5, espera=3):
-        super().__init__(Vec3(0, 0, 0))
-        self.model = 'quad'
+        super().__init__(alvo, obstaculo, posicao, escala, velocidade, espera)
+
         self.color = color.light_gray
-        self.collider = 'box'
-        self.always_on_top = True
-        self.position = posicao
-        self.scale = escala
-
-        self.espera_padrao = espera
-        self.espera = espera
-        self.delta = 0
-
-        self.sensor_obstaculos = Sensor(
-            obstaculo, (self, alvo), visao, alcance)
-        self.sensor_objetivo = Sensor(alvo, (), escala, 1)
-        self.memoria = Memoria()
-        self.movimento = Movimento((self, alvo), velocidade, escala)
-
-        self.historia: List[Tuple[str, float]] = list()
 
         self.direcoes = {
             'up': self.up, 'down': self.down, 'left': self.left, 'right': self.right}
-
         self.direcoes_reversas = {
             'up': self.down, 'down': self.up, 'left': self.right, 'right': self.left}
 
+        self.historia: List[Tuple[str, float]] = list()
+
+        self.sensor_obstaculos = Sensor(obstaculo, (alvo,), visao, alcance)
+        self.sensor_objetivo = Sensor(alvo, (), escala, 1)
+        self.memoria = Memoria()
+
+        self.create_trails()
+        self.create_parts()
+
+    def create_trails(self):
         self.trilha_caminho = Trilha(color=color.rgba(0, 128, 128, 100))
 
         self.trilha_obstaculos = Trilha(
             color=color.rgba(128, 0, 128, 100), always_on_top=True)
 
+    def create_parts(self):
         self.nariz_entity = Parte(self, Vec3(
             1, 0, 0), model='diamond', scale=(.5, .5), color=color.black, always_on_top=True)
 
@@ -75,11 +68,8 @@ class Exemplo(Corpo):
 
         self.cauda_entity.model.generate()
 
-    def reset(self, alvo: Entity, obstaculo: Entity, posicao: Vec3):
-        super().reset()
-
-        self.espera = self.espera_padrao
-        self.delta = 0
+    def reset(self, alvo: Entity, posicao: Vec3):
+        super().reset(alvo, posicao)
 
         self.historia = list()
 
@@ -87,20 +77,8 @@ class Exemplo(Corpo):
         self.trilha_caminho.reset()
         self.trilha_obstaculos.reset()
 
-        # TODO: tornar em resets padrao
-        self.movimento.ignorar = (self, alvo)
-        self.sensor_obstaculos.alvo = obstaculo
-        self.sensor_obstaculos.ignorar = (self, alvo)
+        self.sensor_obstaculos.ignorar = (alvo,)
         self.sensor_objetivo.alvo = alvo
-        self.sensor_objetivo.ignorar = ()
-        self.position = posicao
-
-    def get_rear(self):
-        # TODO: verificar se 2.1 é o melhor número
-        x = int(self.world_x - (self.orientacao.x / 2.1))
-        y = int(self.world_y - (self.orientacao.y / 2.1))
-
-        return x, y
 
     def memorize_objective(self):
         hit_info = self.sensor_objetivo.lookup(self.world_position, self.up)
@@ -127,7 +105,7 @@ class Exemplo(Corpo):
             posicao = int(entity.world_x), int(entity.world_y)
 
             if posicao not in self.memoria.atual:
-                self.trilha_caminho.nova_trilha(posicao)
+                self.trilha_obstaculos.nova_trilha(posicao)
 
             self.memoria.memorize(posicao, 'obstacle')
 
@@ -192,28 +170,12 @@ class Exemplo(Corpo):
         if not self.orientacao.y:
             self.y = y_int + .5
 
-    def can_move(self):
-        return self.movimento.can_move(self.world_position, self.orientacao)
+    def pre_move(self):
+        self.memorize_objective()
+        self.memorize_obstacles()
 
-    def move(self):
-        self.position = self.movimento.move(
-            self.world_position, self.orientacao, self.delta)
+        self.update_direction()
 
-    def update(self):
-        self.delta = time.dt
-
-        if self.delta * self.movimento.velocidade > .5:
-            return
-
-        if self.espera > 0:
-            self.espera -= self.delta
-        else:
-            self.memorize_objective()
-            self.memorize_obstacles()
-
-            self.update_direction()
-
-            if self.can_move():
-                self.move()
-                self.ajust_center()
-                self.memorize_path()
+    def post_move(self):
+        self.ajust_center()
+        self.memorize_path()
