@@ -1,9 +1,8 @@
 from ursina import *
 
-from classes.Caminho import Caminho
 from classes.Labirinto import Labirinto
 from classes.Mapa import Mapa
-from classes.Robo import Robo
+from robos.exemplo.Exemplo import Exemplo
 
 window.vsync = False
 
@@ -20,8 +19,17 @@ camera.fov = 24
 
 mapa = Mapa()
 labirinto = Labirinto()
-caminho = Caminho()
-robo = Robo(caminho)
+
+mapa.gerarDicionario(30)
+labirinto.gerarVertices(mapa.dicionario)
+
+inicio_x, inicio_y = mapa.inicio
+posicao_inicial = Vec3(inicio_x + .5, inicio_y + .5, 0)
+escala = Vec3(.5, .5, 0)
+visao = Vec3(2, 2, 0)
+
+robo = Exemplo(labirinto.fim, labirinto, posicao_inicial,
+               escala, visao, espera=0, velocidade=100)
 
 
 def reset():
@@ -31,12 +39,10 @@ def reset():
     mapa.gerarDicionario(30)
     labirinto.gerarVertices(mapa.dicionario)
 
-    robo.reset()
-
     inicio_x, inicio_y = mapa.inicio
+    posicao_inicial = Vec3(inicio_x + .5, inicio_y + .5, 0)
 
-    robo.position = inicio_x + .5, inicio_y + .5
-    robo.objetivo = labirinto.fim
+    robo.reset(labirinto.fim, labirinto, posicao_inicial)
 
 
 def update():
@@ -49,7 +55,5 @@ def update():
 
     camera.world_x, camera.world_y = robo.world_x, robo.world_y
 
-
-reset()
 
 app.run()
