@@ -25,14 +25,15 @@ class HumanControlled(Robo):
                 self.up * (held_keys['w'] - held_keys['s'])
                 + self.right * (held_keys['d'] - held_keys['a'])
             ).normalized()
+        else:
+            self.orientacao = Vec3(0, 0, 0)
 
     def memorize_path(self):
         posicao = self.get_rear()
 
         if posicao not in self.memoria.atual:
             self.trilha_caminho.nova_trilha(posicao)
-
-        self.memoria.memorize(posicao, 'path')
+            self.memoria.memorize(posicao, 'path')
 
     def pre_move(self):
         self.update_direction()

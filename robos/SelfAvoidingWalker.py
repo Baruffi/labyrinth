@@ -94,7 +94,7 @@ class SelfAvoidingWalker(Robo):
                 self.world_position, self.left)
 
         if hit_info.hit:
-            posicao = int(hit_info.world_point.x), int(hit_info.world_point.y)
+            posicao = floor(hit_info.world_point.x), floor(hit_info.world_point.y)
 
             self.memoria.memorize(posicao, 'objective')
 
@@ -102,12 +102,11 @@ class SelfAvoidingWalker(Robo):
         hit_info = self.sensor_obstaculos.lookup(self.world_position)
 
         for entity in hit_info.entities:
-            posicao = int(entity.world_x), int(entity.world_y)
+            posicao = floor(entity.world_x), floor(entity.world_y)
 
             if posicao not in self.memoria.atual:
                 self.trilha_obstaculos.nova_trilha(posicao)
-
-            self.memoria.memorize(posicao, 'obstacle')
+                self.memoria.memorize(posicao, 'obstacle')
 
     def memorize_path(self):
         posicao = self.get_rear()
@@ -162,8 +161,8 @@ class SelfAvoidingWalker(Robo):
             print(f'Erro de pathfind: {e!r}')
 
     def ajust_center(self):
-        x_int = int(self.x)
-        y_int = int(self.y)
+        x_int = floor(self.x)
+        y_int = floor(self.y)
 
         if not self.orientacao.x:
             self.x = x_int + .5

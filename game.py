@@ -7,6 +7,7 @@ from classes.Labirinto import Labirinto
 from classes.Mapa import Mapa
 from classes.Robo import Robo
 from robos.HumanControlled import HumanControlled
+from robos.SelfAvoidingPriorityWalker import SelfAvoidingPriorityWalker
 from robos.SelfAvoidingWalker import SelfAvoidingWalker
 
 window.vsync = False
@@ -33,15 +34,21 @@ posicao_inicial = Vec3(inicio_x + .5, inicio_y + .5, 0)
 escala = Vec3(.5, .5, 0)
 visao = Vec3(2, 2, 0)
 alcance = 2
-espera = 1
-velocidade = 10
+espera = 0
+velocidade = 50
 
 human_controlled = HumanControlled(
     labirinto.fim, labirinto, posicao_inicial, escala, velocidade, espera)
 self_avoiding_walker = SelfAvoidingWalker(
     labirinto.fim, labirinto, posicao_inicial, escala, visao, alcance, velocidade, espera)
+# self_avoiding_priority_walker = SelfAvoidingPriorityWalker(
+#     labirinto.fim, labirinto, posicao_inicial, escala, alcance, velocidade, espera)
+# self_avoiding_priority_walker_reversed = SelfAvoidingPriorityWalker(
+#     labirinto.fim, labirinto, posicao_inicial, escala, alcance, velocidade, espera, color.turquoise, True)
 
-robos: Deque[Robo] = deque([human_controlled, self_avoiding_walker])
+robos: Deque[Robo] = deque(
+    [human_controlled, self_avoiding_walker]
+)
 
 
 def reset():

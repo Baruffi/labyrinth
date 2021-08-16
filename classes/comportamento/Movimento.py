@@ -10,20 +10,31 @@ class Movimento():
         self.velocidade = velocidade
         self.escala = escala
 
-    def can_move(self, posicao: Vec3, direcao: Vec3):
+    def edge_cast(self, posicao: Vec3, direcao: Vec3, espessura: Vec3, distancia: float):
         hit_info = boxcast(posicao, direcao, traverse_target=self.obstaculo,
-                           ignore=self.ignorar, thickness=self.escala * .8, distance=(self.escala.y / 2))
+                           ignore=self.ignorar, distance=distancia, thickness=espessura, debug=True)
 
-        return not hit_info.hit
+        return hit_info
+
+    def get_distancia_base(self, direcao: Vec3):
+        distancia_base = sqrt(((self.escala.x / 2) * direcao.x)
+                              ** 2 + ((self.escala.y / 2) * direcao.y) ** 2)
+
+        return distancia_base
 
     def move(self, posicao: Vec3, direcao: Vec3, delta: float):
-        hit_info = boxcast(posicao, direcao, traverse_target=self.obstaculo, ignore=self.ignorar,
-                           thickness=self.escala * .8, distance=(self.escala.y / 2) + (delta * self.velocidade))
+        distancia_base = self.get_distancia_base(direcao)
+        hit_info = self.edge_cast(posicao, direcao, self.escala, distancia_base + (delta * self.velocidade))
 
         if hit_info.hit:
-            if direcao.x:
-                return Vec3(hit_info.world_point.x - direcao.x * self.escala.y / 2, posicao.y, 0)
-            elif direcao.y:
-                return Vec3(posicao.x, hit_info.world_point.y - direcao.y * self.escala.y / 2, 0)
-        else:
-            return posicao + direcao * delta * self.velocidade
+            if not hit_info.distance:
+                return False
+
+            stuck_hit_info = self.edge_cast(hit_info.point, direcao, self.escala, distancia_base)
+
+            if stuck_hit_info.hit:
+                return False
+
+            return hit_info.point
+
+        return posicao + direcao * delta * self.velocidade

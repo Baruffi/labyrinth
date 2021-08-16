@@ -17,6 +17,7 @@ class Robo(Corpo):
         self.espera = espera
         self.delta = 0
 
+        self.obstaculo = obstaculo
         self.movimento = Movimento(obstaculo, (alvo,), velocidade, escala)
 
     def reset(self, alvo: Entity, posicao: Vec3):
@@ -30,27 +31,21 @@ class Robo(Corpo):
 
     def get_rear(self):
         # TODO: verificar se 2.1 é o melhor número
-        x = int(self.world_x - (self.orientacao.x / 2.1))
-        y = int(self.world_y - (self.orientacao.y / 2.1))
+        x = floor(self.world_x - (self.orientacao.x / 2.1))
+        y = floor(self.world_y - (self.orientacao.y / 2.1))
 
         return x, y
 
-    def get_front(self):
-        # TODO: verificar se 2.1 é o melhor número
-        x = int(self.world_x + (self.orientacao.x / 2.1))
-        y = int(self.world_y + (self.orientacao.y / 2.1))
-
-        return x, y
-
-    def can_move(self):
-        return self.movimento.can_move(self.world_position, self.orientacao)
+    def is_moving(self):
+        return bool(self.orientacao.x or self.orientacao.y)
 
     def pre_move(self):
         pass
 
     def move(self):
-        self.position = self.movimento.move(
-            self.world_position, self.orientacao, self.delta)
+        nova_posicao = self.movimento.move(self.position, self.orientacao, self.delta)
+
+        return nova_posicao
 
     def post_move(self):
         pass
@@ -69,6 +64,6 @@ class Robo(Corpo):
         else:
             self.pre_move()
 
-            if self.can_move():
-                self.move()
+            if self.is_moving() and (nova_posicao := self.move()):
+                self.position = nova_posicao
                 self.post_move()
