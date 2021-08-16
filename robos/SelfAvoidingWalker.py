@@ -113,8 +113,7 @@ class SelfAvoidingWalker(Robo):
 
         if posicao not in self.memoria.atual:
             self.trilha_caminho.nova_trilha(posicao)
-
-        self.memoria.memorize(posicao, 'path')
+            self.memoria.memorize(posicao, 'path')
 
     def get_surrounding(self, alvo: Tuple[int, int]):
         redor = dict.fromkeys(('right', 'left', 'up', 'down'), 'space')

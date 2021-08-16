@@ -77,21 +77,21 @@ class SelfAvoidingPriorityWalker(Robo):
 
             hit_info = self.sensor_obstaculos.lookup(self.world_position, direcao)
 
-            if hit_info.distance > 1:
-                for quadro in range(1, round(hit_info.distance)):
-                    posicao_espaco = self.world_position + (quadro * direcao)
-                    posicao_espaco = floor(posicao_espaco.x), floor(posicao_espaco.y)
+            for quadro in range(floor(hit_info.distance) + 1):
+                posicao_espaco = self.world_position + (quadro * direcao)
+                posicao_espaco = floor(posicao_espaco.x), floor(posicao_espaco.y)
 
-                    if posicao_espaco not in self.memoria.atual:
-                        self.trilha_espacos.nova_trilha(posicao_espaco)
-                        self.memoria.memorize(posicao_espaco, 'space')
+                if posicao_espaco not in self.memoria.atual:
+                    self.trilha_espacos.nova_trilha(posicao_espaco)
+                    self.memoria.memorize(posicao_espaco, 'space')
 
-            if hit_info.hit and hit_info.world_point:
-                posicao_parede = floor(hit_info.world_point.x), floor(hit_info.world_point.y)
+            if hit_info.hit:
+                for entity in hit_info.entities:
+                    posicao_parede = floor(entity.world_x), floor(entity.world_y)
 
-                if posicao_parede not in self.memoria.atual:
-                    self.trilha_obstaculos.nova_trilha(posicao_parede)
-                    self.memoria.memorize(posicao_parede, 'obstacle')
+                    if posicao_parede not in self.memoria.atual or self.memoria.atual[posicao_parede] == 'space':
+                        self.trilha_obstaculos.nova_trilha(posicao_parede)
+                        self.memoria.memorize(posicao_parede, 'obstacle')
 
     def memorize_path(self):
         posicao = self.get_rear()
@@ -103,17 +103,6 @@ class SelfAvoidingPriorityWalker(Robo):
     def get_surrounding(self):
         redor = dict.fromkeys(('right', 'left', 'up', 'down'), {})
         origem_x, origem_y = self.get_rear()
-
-        # counter = 1
-        # while ...:
-        #     posicao = (origem_x + counter, origem_y)
-        #     if posicao in self.memoria.atual:
-        #         redor['right'][counter] = self.memoria.atual[posicao]
-        #         break
-        #     else:
-        #         pass
-
-        # print(f'{self.memoria.atual=}')
 
         for coordenada in self.memoria.atual:
             x, y = coordenada
@@ -154,7 +143,7 @@ class SelfAvoidingPriorityWalker(Robo):
         for caminho in redor:
             caminho_viavel = []
 
-            for passo in redor[caminho]:
+            for passo in sorted(redor[caminho]):
                 if redor[caminho][passo] not in ('path', 'obstacle'):
                     caminho_viavel.append(passo)
                 else:
@@ -162,8 +151,6 @@ class SelfAvoidingPriorityWalker(Robo):
 
             if caminho_viavel:
                 caminhos_viaveis[caminho] = caminho_viavel
-
-        # print(f'{redor=}', f'{caminhos_viaveis=}')
 
         orientacao = self.get_path(redor, caminhos_viaveis)
 
